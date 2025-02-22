@@ -37,8 +37,8 @@ class ChessGUI(tk.Tk):
 
     def draw_board(self):
         self.canvas.delete("square")
-        light_color = "#ecf0f1" #"#F0D9B5"
-        dark_color = "#05c46b" #"#B58863"
+        light_color = "#F0D9B5" #"#F0D9B5"
+        dark_color = "#B58863" #"#B58863"
         # First, draw the squares.
         for rank in range(8):
             for file in range(8):
@@ -47,7 +47,7 @@ class ChessGUI(tk.Tk):
                 x2 = x1 + self.square_size
                 y2 = y1 + self.square_size
                 color = light_color if (file + rank) % 2 == 0 else dark_color
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags="square")
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="", tags="square")
         
         # Highlight the squares from the last move.
         if self.last_move is not None:
@@ -59,7 +59,7 @@ class ChessGUI(tk.Tk):
                 x2 = x1 + self.square_size
                 y2 = y1 + self.square_size
                 self.canvas.create_rectangle(x1, y1, x2, y2,
-                                             fill="#c8d6e5", outline="", tags="square")
+                                             fill="#a07b27", outline="", tags="square")
         
         # If a square is selected, draw a blue border.
         if self.selected_square is not None:
@@ -84,7 +84,7 @@ class ChessGUI(tk.Tk):
                 # Draw a small circle as a move indicator.
                 r = 10  # radius
                 self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r,
-                                        fill="#182C61", outline="", tags="legal")
+                                        fill="#2f3640", outline="", tags="legal")
 
     def draw_pieces(self):
         self.canvas.delete("piece")
