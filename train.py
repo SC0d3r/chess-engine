@@ -177,15 +177,16 @@ if __name__ == "__main__":
     # Y = Y.view(-1, 1)
 
     # for each game
+    loss = 0
     for i, game in enumerate(moves):
       result = winners[i]
       traj, final_res = sample_full_game(game, result)
       model.train()
-      loss = td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
+      loss += td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
 
       clear_temp_line()
       if i % 100 == 0:
-        print(f"Epoch {epoch}, loss {loss.item():.4f}")
+        print(f"Epoch {epoch}, loss {loss.item()/max(1,i):.4f}")
         model.save()
       else:
         write_temp_line(f"{i}/{epoch}/{total_epochs}")
