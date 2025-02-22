@@ -1,5 +1,5 @@
 from cnn import CNN
-from train import sample_games_at_different_moves
+from train import sample_games_at_different_moves, into_input
 import pandas as pd
 from agent import Agent
 import chess
@@ -22,6 +22,9 @@ if __name__ == "__main__":
 
   agent_color = b.turn
   agent = Agent(agent_color)
-  played_move = agent.play(b)
-  print(f"turn {'black' if agent_color == chess.BLACK else 'white'}, played move is {played_move}")
+  played_move, best_score = agent.play(b, 3)
+
+  board_score = model(into_input(b).unsqueeze(0))
+
+  print(f"turn {'black' if agent_color == chess.BLACK else 'white'}, played move is {played_move}, best_score {best_score}, CNN board score {board_score.item()}")
   print(b)

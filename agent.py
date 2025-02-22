@@ -22,15 +22,17 @@ class Agent:
         self.model = CNN()
         self.model.load()
 
-    def play(self, board):
+    def play(self, board, depth=2):
         # Standard minimax play.
         if board.turn != self.color:
             return
 
-        move = self._select_best_move(board)
-        assert move in board.legal_moves, f"move {move} is not valid, legal moves are {board.legal_moves}"
-        board.push(move)
-        return move
+        best_move, best_score = self._select_best_move(board, depth=depth)
+
+        assert best_move in board.legal_moves, f"move {best_move} is not valid, legal moves are {board.legal_moves}"
+        board.push(best_move)
+
+        return best_move, best_score
 
     def playMCTS(self, board, iterations=1000):
         """
@@ -55,7 +57,7 @@ class Agent:
         best_child = max(root.children, key=lambda c: c.visits)
         move = best_child.move
         board.push(move)
-        return move
+        return move, best_child.value
 
     def _tree_policy(self, node):
         """
@@ -146,7 +148,7 @@ class Agent:
             alpha = max(alpha, best_score)
             board.pop()
 
-        return best_move
+        return best_move, best_score
 
     def _minmax(self, board, alpha, beta, depth, maximizing_player=False):
         """Minimax algorithm with alpha-beta pruning."""
