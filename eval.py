@@ -1,6 +1,8 @@
 from cnn import CNN
 from train import sample_games
 import pandas as pd
+from agent import Agent
+import chess
 
 if __name__ == "__main__":
   data = pd.read_csv("./games.csv")
@@ -15,4 +17,11 @@ if __name__ == "__main__":
 
   print(f"winner is {'white' if y == 1 else 'black' if y == -1 else 'draw'}, nn output is {val.item()}")
   # X.shape
-  print(boards[0])
+  b = boards[0]
+  print(b)
+
+  agent_color = b.turn
+  agent = Agent(agent_color)
+  played_move = agent.play(b)
+  print(f"played move is {played_move}")
+  print(b)
