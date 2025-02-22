@@ -176,10 +176,12 @@ if __name__ == "__main__":
     # X, Y = sample_games_at_different_moves(data, 64)
     # Y = Y.view(-1, 1)
 
+    shuffled_moves_results = list(zip(moves, winners))
+    random.shuffle(shuffled_moves_results)
+
     # for each game
     loss = 0
-    for i, game in enumerate(moves):
-      result = winners[i]
+    for i, (game, result) in enumerate(shuffled_moves_results):
       traj, final_res = sample_full_game(game, result)
       model.train()
       loss += td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
