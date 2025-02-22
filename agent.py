@@ -18,10 +18,10 @@ class Agent:
 
     assert(move in board.legal_moves, f"move {move} is not valid, legal moves are {board.legal_moves}")
 
-    board.push_san(move)
+    board.push(move)
     return move
 
-  def _select_best_move(self, board, depth = 4):
+  def _select_best_move(self, board, depth = 2):
     legal_moves = board.legal_moves
     
     best_score = -math.inf
@@ -48,7 +48,7 @@ class Agent:
     y = self.model(input_tensor.unsqueeze(0))
     return y.item()
 
-  def _minmax(self, board, alpha=-math.inf, beta=math.inf, depth = 4, maximizing_player=False):
+  def _minmax(self, board, alpha, beta, depth, maximizing_player=False):
     """minmax algorithm with alpha-beta pruning"""
 
     # ending conditions
@@ -77,7 +77,6 @@ class Agent:
       # mimizing player
       min_eval = math.inf
       for lm in legal_moves:
-        print(f"lm in maximizing {lm}")
         board.push(lm)
         eval_score = self._minmax(board, alpha, beta, depth - 1, True)
         board.pop()
