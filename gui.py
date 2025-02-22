@@ -11,16 +11,19 @@ PIECE_UNICODE = {
 }
 
 class ChessGUI(tk.Tk):
-    def __init__(self, use_minimax=False):
+    def __init__(self, use_minimax=False, minimax_depth=2, mcts_iterations=1000):
         super().__init__()
-        print(f"Agent uses {'Minimax' if use_minimax else 'MCTS'} to play")
+        print(f"Agent uses {'Minimax' if use_minimax else 'MCTS'} to play, Minimax Depth {minimax_depth}, MCTS iterations {mcts_iterations}")
         self.title("Chess vs Agent")
         self.square_size = 60
         self.canvas_size = self.square_size * 8
         self.canvas = tk.Canvas(self, width=self.canvas_size, height=self.canvas_size)
         self.canvas.pack()
-        
-        # Initialize board, agent, and last move.
+
+        self.minimax_depth = minimax_depth
+        self.mcts_iterations = mcts_iterations
+          
+          # Initialize board, agent, and last move.
         self.board = chess.Board()
         # Let the human play white and the agent black.
         self.agent = Agent(chess.BLACK)
@@ -158,10 +161,11 @@ class ChessGUI(tk.Tk):
         if self.board.is_game_over():
             self.show_game_over()
             return
-        move, _ = self.agent.play(self.board) if self.use_minimax else self.agent.playMCTS(self.board)
+        move, score = self.agent.play(self.board, self.minimax_depth) if self.use_minimax else self.agent.playMCTS(self.board,self.mcts_iterations)
         if move is not None:
             self.last_move = move
             self.update_board()
+            print(f"move {move}, score {score}")
             if self.board.is_game_over():
                 self.show_game_over()
 
@@ -179,7 +183,9 @@ if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument("--minimax", action="store_true", help="use the minimax search instead of MCTS")
+  parser.add_argument("--md", type=int, default=2, help="minimax depth")
+  parser.add_argument("--mi", type=int, default=1000, help="MCTS iterations")
   args = parser.parse_args()
 
-  gui = ChessGUI(args.minimax)
+  gui = ChessGUI(args.minimax, args.md, args.mi)
   gui.mainloop()
