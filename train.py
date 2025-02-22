@@ -63,7 +63,7 @@ def sample_full_game(moves, result):
           # Store every 5th move or the last move
           # TODO: this should idealy get removed 
           # I down sampled this because of out of memory (ram) issues
-          if i % 5 == 0 or i == len(moves) - 1:
+          if i % 2 == 0 or i == len(moves) - 1:
               trajectory.append(into_input(board))
       except Exception as e:
           # If an illegal move is encountered, break out
