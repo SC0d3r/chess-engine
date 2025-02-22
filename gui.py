@@ -156,7 +156,7 @@ class ChessGUI(tk.Tk):
         if self.board.is_game_over():
             self.show_game_over()
             return
-        move = self.agent.play(self.board)
+        move = self.agent.playMCTS(self.board)
         if move is not None:
             self.last_move = move
             self.update_board()
