@@ -38,6 +38,10 @@ class Agent:
         best_score = eval_score
         best_move = lm
 
+      # TODO: should I remove this
+      # or this helps with pruning sibling moves?
+      alpha = max(alpha, best_score)
+
       board.pop()
 
     return best_move
