@@ -1,5 +1,5 @@
 from cnn import CNN
-from train import sample_games
+from train import sample_games_at_different_moves
 import pandas as pd
 from agent import Agent
 import chess
@@ -11,7 +11,7 @@ if __name__ == "__main__":
   model.load()
   model.eval()
 
-  X, Y, boards = sample_games(data, 1, True)
+  X, Y, boards = sample_games_at_different_moves(data, 1, True)
   y = Y[0]
   val = model(X)
 

@@ -45,7 +45,71 @@ def into_input(board):
 
   return X
 
-def sample_games(data, n  = 1000, ret_boards = False):
+def sample_full_game(moves, result):
+  """
+  Samples a full game trajectory from the dataset.
+  Returns a list of board state tensors (trajectory) and the final game result.
+  """
+  moves = moves.split()
+  final_score = 1 if result == "white" else 0 if result == "draw" else -1
+
+  board = chess.Board()
+  trajectory = [into_input(board)]
+
+  for m in moves:
+      try:
+          board.push_san(m)
+          trajectory.append(into_input(board))
+      except Exception as e:
+          # If an illegal move is encountered, break out
+          break
+
+  # Stack trajectory: shape (T, channels, 8, 8)
+  return torch.stack(trajectory), final_score
+
+def td_lambda_update_trajectory(model, trajectory, final_reward, optimizer, lambda_value=0.8, gamma=0.99):
+    """
+    Applies TD(λ) update on a single game trajectory.
+    Assumes that intermediate rewards are 0 (only final reward matters).
+    """
+    X = trajectory
+    # Get value estimates for all states
+    V = model(X)  # shape (T, 1)
+    T = len(trajectory)
+
+    # Compute TD errors for each time step.
+    # For non-terminal states, reward is 0.
+    deltas = []
+    for t in range(T - 1):
+        # r_t is 0 for t < T-1, and gamma * V[t+1] gives the bootstrapped value.
+        delta_t = gamma * V[t+1] - V[t] # note r(t) is zero for non terminal states
+        deltas.append(delta_t)
+    # Terminal TD error: no bootstrapping, only final reward.
+    delta_T = final_reward - V[-1]
+    deltas.append(delta_T)
+    # Now deltas is a list of T tensors.
+
+    # For each state t, compute the λ-return error:
+    td_lambda_errors = []
+    for t in range(T):
+        error_t = 0
+        power = 1.0
+        for k in range(t, T):
+            error_t += power * deltas[k]
+            power *= lambda_value
+        td_lambda_errors.append(error_t)
+    td_lambda_errors = torch.stack(td_lambda_errors)  # shape (T, 1)
+
+    # Loss: Mean squared error of the λ-return errors.
+    loss = (td_lambda_errors ** 2).mean()
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    return loss
+
+def sample_games_at_different_moves(data, n  = 1000, ret_boards = False):
   """
   this function samples n games from data
   and then creates a board with a random move on that sample
@@ -104,23 +168,31 @@ if __name__ == "__main__":
   loss_fn = torch.nn.MSELoss()
   optim = torch.optim.Adam(model.parameters(), lr=alpha)
 
-  total_epochs = 100000
+  moves = data['moves']
+  winners = data['winner']
+
+  total_epochs = 1000
   for epoch in range(total_epochs):
-    X, Y = sample_games(data, 64)
-    Y = Y.view(-1, 1)
+    # X, Y = sample_games_at_different_moves(data, 64)
+    # Y = Y.view(-1, 1)
 
-    model.train()
+    # for each game
+    for i, game in enumerate(moves):
+      result = winners[i]
+      traj, final_res = sample_full_game(game, result)
+      model.train()
+      loss = td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
 
-    preds = model(X)
-    loss = loss_fn(preds, Y)
+      clear_temp_line()
+      if i % 100 == 0:
+        print(f"Epoch {epoch}, loss {loss.item():.4f}")
+        model.save()
+      else:
+        write_temp_line(f"{i}/{epoch}/{total_epochs}")
 
-    optim.zero_grad()
-    loss.backward()
-    optim.step()
+    # preds = model(X)
+    # loss = loss_fn(preds, Y)
 
-    clear_temp_line()
-    if epoch % 100 == 0:
-      print(f"Epoch {epoch}, loss {loss.item():.4f}")
-      model.save()
-    else:
-      write_temp_line(f"{epoch}/{total_epochs}")
+    # optim.zero_grad()
+    # loss.backward()
+    # optim.step()
