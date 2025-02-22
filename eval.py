@@ -23,5 +23,5 @@ if __name__ == "__main__":
   agent_color = b.turn
   agent = Agent(agent_color)
   played_move = agent.play(b)
-  print(f"played move is {played_move}")
+  print(f"turn {'black' if agent_color == chess.BLACK else 'white'}, played move is {played_move}")
   print(b)
