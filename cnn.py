@@ -26,6 +26,7 @@ class CNN(torch.nn.Module):
     # print("Model saved successfully ...")
 
   def load(self, path = "./CHESS_ENGINE_WEIGHTS"):
-    self.load_state_dict(torch.load(path + ".pt"))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    self.load_state_dict(torch.load(path + ".pt", weights_only=True, map_location=device))
     self.eval()
     print("Model loaded successfully ...")
