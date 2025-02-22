@@ -59,12 +59,7 @@ def sample_full_game(moves, result):
   for i, m in enumerate(moves):
       try:
           board.push_san(m)
-          # trajectory.append(into_input(board))
-          # Store every 5th move or the last move
-          # TODO: this should idealy get removed 
-          # I down sampled this because of out of memory (ram) issues
-          if i % 2 == 0 or i == len(moves) - 1:
-              trajectory.append(into_input(board))
+          trajectory.append(into_input(board))
       except Exception as e:
           # If an illegal move is encountered, break out
           break
@@ -185,15 +180,16 @@ if __name__ == "__main__":
     random.shuffle(shuffled_moves_results)
 
     # for each game
-    loss = 0
+    total_loss = 0
     for i, (game, result) in enumerate(shuffled_moves_results):
       traj, final_res = sample_full_game(game, result)
       model.train()
-      loss += td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
+      loss = td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
+      total_loss += loss.item()
 
       clear_temp_line()
       if i % 100 == 0:
-        print(f"Epoch {epoch}, loss {loss.item()/max(1,i):.4f}")
+        print(f"Epoch {epoch}, loss {total_loss/max(1,i):.4f}")
         model.save()
       else:
         write_temp_line(f"{i}/{epoch}/{total_epochs}")
