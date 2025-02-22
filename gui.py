@@ -11,8 +11,9 @@ PIECE_UNICODE = {
 }
 
 class ChessGUI(tk.Tk):
-    def __init__(self):
+    def __init__(self, use_minimax=False):
         super().__init__()
+        print(f"Agent uses {'Minimax' if use_minimax else 'MCTS'} to play")
         self.title("Chess vs Agent")
         self.square_size = 60
         self.canvas_size = self.square_size * 8
@@ -23,6 +24,7 @@ class ChessGUI(tk.Tk):
         self.board = chess.Board()
         # Let the human play white and the agent black.
         self.agent = Agent(chess.BLACK)
+        self.use_minimax = use_minimax
         self.selected_square = None
         self.last_move = None  # Will hold the last move played
 
@@ -156,7 +158,7 @@ class ChessGUI(tk.Tk):
         if self.board.is_game_over():
             self.show_game_over()
             return
-        move = self.agent.playMCTS(self.board)
+        move = self.agent.play(self.board) if self.use_minimax else self.agent.playMCTS(self.board)
         if move is not None:
             self.last_move = move
             self.update_board()
@@ -174,5 +176,10 @@ class ChessGUI(tk.Tk):
         )
 
 if __name__ == '__main__':
-    gui = ChessGUI()
-    gui.mainloop()
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--minimax", action="store_true", help="use the minimax search instead of MCTS")
+  args = parser.parse_args()
+
+  gui = ChessGUI(args.minimax)
+  gui.mainloop()
