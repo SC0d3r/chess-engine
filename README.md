@@ -13,6 +13,7 @@ python3 eval.py
 # GUI
 to play against the agent run 
 > but make sure that you have already trained the agent and the agent's weights are in the same directory
+![image of a chess board ready to play](./gui.png)
 ```sh
 python3 gui.py
 ```

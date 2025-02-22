@@ -59,7 +59,7 @@ class ChessGUI(tk.Tk):
                 x2 = x1 + self.square_size
                 y2 = y1 + self.square_size
                 self.canvas.create_rectangle(x1, y1, x2, y2,
-                                             fill="#a07b27", outline="", tags="square")
+                                             fill="#d07050", outline="", tags="square")
         
         # If a square is selected, draw a blue border.
         if self.selected_square is not None:
@@ -82,9 +82,10 @@ class ChessGUI(tk.Tk):
                 cx = file * self.square_size + self.square_size / 2
                 cy = (7 - rank) * self.square_size + self.square_size / 2
                 # Draw a small circle as a move indicator.
-                r = 10  # radius
+                r = 5  # radius
+                fill = "#dAb583"
                 self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r,
-                                        fill="#2f3640", outline="", tags="legal")
+                                        fill=fill, outline=fill, tags="legal")
 
     def draw_pieces(self):
         self.canvas.delete("piece")
@@ -95,8 +96,25 @@ class ChessGUI(tk.Tk):
                 rank = chess.square_rank(square)
                 x = file * self.square_size + self.square_size / 2
                 y = (7 - rank) * self.square_size + self.square_size / 2
-                symbol = PIECE_UNICODE[piece.symbol()]
-                self.canvas.create_text(x, y, text=symbol, font=("Arial", 32), tags="piece")
+
+                if piece.color == chess.WHITE:
+                    # Use the black glyph for white pieces
+                    symbol = PIECE_UNICODE[piece.symbol().lower()]
+                    # Draw a black outline first (slightly offset for visibility)
+                    self.canvas.create_text(
+                        x + 1, y + 1, text=symbol, font=("Arial", 32),
+                        tags="piece", fill="black"
+                    )
+                    # Draw the actual piece in white on top
+                    fill_color = "white"
+                else:
+                    symbol = PIECE_UNICODE[piece.symbol()]
+                    fill_color = "black"
+
+                self.canvas.create_text(
+                    x, y, text=symbol, font=("Arial", 32),
+                    tags="piece", fill=fill_color
+                )
 
     def on_canvas_click(self, event):
         file = event.x // self.square_size
