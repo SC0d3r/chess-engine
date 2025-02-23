@@ -7,16 +7,19 @@ class CNN(torch.nn.Module):
     self.bn1 = torch.nn.BatchNorm2d(32)
     self.cnv2 = torch.nn.Conv2d(32, 64, kernel_size=3, padding=1)
     self.bn2 = torch.nn.BatchNorm2d(64)
-    self.f1 = torch.nn.Linear(64 * 8 * 8, 128)
-    self.bn3 = torch.nn.BatchNorm1d(128)
+    self.cnv3 = torch.nn.Conv2d(64, 128, kernel_size=3, padding=1)
+    self.bn3 = torch.nn.BatchNorm2d(128)
+    self.f1 = torch.nn.Linear(128 * 8 * 8, 128)
+    self.bn4 = torch.nn.BatchNorm1d(128)
     self.f2 = torch.nn.Linear(128, 1)
     self.dropout = torch.nn.Dropout(p = 0.3)
 
   def forward(self, x):
     x = torch.relu(self.bn1(self.cnv1(x))) # batch normalization before activation
     x = torch.relu(self.bn2(self.cnv2(x)))
+    x = torch.relu(self.bn3(self.cnv3(x)))
     x = x.view(x.size(0), -1)
-    x = torch.relu(self.bn3(self.f1(x)))
+    x = torch.relu(self.bn4(self.f1(x)))
     x = self.dropout(x) # dropout after activation
     x =  torch.tanh(self.f2(x))  # [-1, 1]
     return x
