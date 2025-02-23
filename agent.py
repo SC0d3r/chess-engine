@@ -49,6 +49,9 @@ class Agent:
             # 1. Selection & Expansion
             node = self._tree_policy(root)
             # 2. Evaluation (Simulation/Rollout using the CNN evaluation function)
+            # TODO: should we multiply the rewards by -1 if the agent is black
+            # cause our CNN give [-1, 1] score and for black closer to -1 means
+            # its black favor move
             reward = self._default_policy(node.board)
             # 3. Backpropagation
             self._backup(node, reward)
