@@ -152,15 +152,17 @@ if __name__ == "__main__":
   import argparse
   import pandas as pd
   from utils import clear_temp_line, write_temp_line
-  data = pd.read_csv("./games.csv")
 
   parser = argparse.ArgumentParser(description="Use --fresh if you want a new training")
   parser.add_argument("-f", "--fresh", action="store_true", help="use --fresh if you want to train a new model")
+  parser.add_argument("--datafile", type=str, default="./games.csv", help="datafile which should be a csv file with columns moves, winner")
 
   args = parser.parse_args()
-  print(f"Running with args, fresh {args.fresh}")
+  print(f"Running with args, fresh {args.fresh}, datafile {args.datafile}")
 
   model = CNN() 
+
+  data = pd.read_csv(args.datafile)
 
   if not args.fresh:
     model.load()
