@@ -185,7 +185,11 @@ if __name__ == "__main__":
     # for each game
     total_loss = 0
     for i, (game, result) in enumerate(shuffled_moves_results):
-      traj, final_res = sample_full_game(game, result)
+      try:
+        traj, final_res = sample_full_game(game, result)
+      except Exception as e:
+        print(f"::ERROR {type(e).__name__}")
+        continue
       model.train()
       loss = td_lambda_update_trajectory(model, traj, final_res, optim, lambda_value=0.8, gamma=0.99)
       total_loss += loss.item()
