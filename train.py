@@ -72,7 +72,7 @@ def td_lambda_update_trajectory(model, trajectory, final_reward, optimizer, lamb
     Applies TD(λ) update on a single game trajectory.
     Assumes that intermediate rewards are 0 (only final reward matters).
     """
-    X = trajectory
+    X = trajectory.to(device)
     # Get value estimates for all states
     V = model(X)  # shape (T, 1)
     T = len(trajectory)
