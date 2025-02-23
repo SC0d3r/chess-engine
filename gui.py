@@ -11,8 +11,11 @@ PIECE_UNICODE = {
 }
 
 class ChessGUI(tk.Tk):
-    def __init__(self, use_minimax=False, minimax_depth=2, mcts_iterations=1000):
+    def __init__(self, human_color=chess.WHITE, use_minimax=False, minimax_depth=2, mcts_iterations=1000):
         super().__init__()
+        # Determine the agent's color: the opposite of the human's.
+        agent_color = chess.WHITE if human_color == chess.BLACK else chess.BLACK
+        print(f"Human plays {'White' if human_color == chess.WHITE else 'Black'}, Agent plays {'White' if agent_color == chess.WHITE else 'Black'}")
         print(f"Agent uses {'Minimax' if use_minimax else 'MCTS'} to play, Minimax Depth {minimax_depth}, MCTS iterations {mcts_iterations}")
         self.title("Chess vs Agent")
         self.square_size = 60
@@ -23,16 +26,20 @@ class ChessGUI(tk.Tk):
         self.minimax_depth = minimax_depth
         self.mcts_iterations = mcts_iterations
           
-          # Initialize board, agent, and last move.
+        # Initialize board, agent, and last move.
         self.board = chess.Board()
-        # Let the human play white and the agent black.
-        self.agent = Agent(chess.BLACK)
+        self.human_color = human_color
+        self.agent = Agent(agent_color)
         self.use_minimax = use_minimax
         self.selected_square = None
         self.last_move = None  # Will hold the last move played
 
         self.canvas.bind("<Button-1>", self.on_canvas_click)
         self.update_board()
+
+        # If it's not the human's turn (e.g. human plays black), let the agent move.
+        if self.board.turn != self.human_color:
+            self.after(100, self.agent_move)
 
     def update_board(self):
         self.draw_board()
@@ -42,9 +49,9 @@ class ChessGUI(tk.Tk):
 
     def draw_board(self):
         self.canvas.delete("square")
-        light_color = "#F0D9B5" #"#F0D9B5"
-        dark_color = "#B58863" #"#B58863"
-        # First, draw the squares.
+        light_color = "#F0D9B5"
+        dark_color = "#B58863"
+        # Draw the squares.
         for rank in range(8):
             for file in range(8):
                 x1 = file * self.square_size
@@ -77,7 +84,6 @@ class ChessGUI(tk.Tk):
             self.canvas.create_rectangle(x1, y1, x2, y2, outline="blue", width=3, tags="square")
 
     def draw_legal_moves(self):
-        # Show legal moves for the piece on the selected square.
         self.canvas.delete("legal")
         for move in self.board.legal_moves:
             if move.from_square == self.selected_square:
@@ -86,7 +92,6 @@ class ChessGUI(tk.Tk):
                 # Compute center of the destination square.
                 cx = file * self.square_size + self.square_size / 2
                 cy = (7 - rank) * self.square_size + self.square_size / 2
-                # Draw a small circle as a move indicator.
                 r = 5  # radius
                 fill = "#dAb583"
                 self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r,
@@ -103,14 +108,12 @@ class ChessGUI(tk.Tk):
                 y = (7 - rank) * self.square_size + self.square_size / 2
 
                 if piece.color == chess.WHITE:
-                    # Use the black glyph for white pieces
+                    # Use the black glyph for white pieces (with a black outline for contrast)
                     symbol = PIECE_UNICODE[piece.symbol().lower()]
-                    # Draw a black outline first (slightly offset for visibility)
                     self.canvas.create_text(
                         x + 1, y + 1, text=symbol, font=("Arial", 32),
                         tags="piece", fill="black"
                     )
-                    # Draw the actual piece in white on top
                     fill_color = "white"
                 else:
                     symbol = PIECE_UNICODE[piece.symbol()]
@@ -126,20 +129,18 @@ class ChessGUI(tk.Tk):
         rank = 7 - (event.y // self.square_size)
         clicked_square = chess.square(file, rank)
         
-        # Only allow human moves (human plays white).
-        if self.board.turn != chess.WHITE:
+        # Only allow human moves.
+        if self.board.turn != self.human_color:
             return
 
         if self.selected_square is None:
             piece = self.board.piece_at(clicked_square)
-            if piece is not None and piece.color == chess.WHITE:
+            if piece is not None and piece.color == self.human_color:
                 self.selected_square = clicked_square
                 self.update_board()
         else:
-            # Create a move from the selected square to the clicked square.
             move = chess.Move(self.selected_square, clicked_square)
             if move not in self.board.legal_moves:
-                # Try queen promotion if necessary.
                 move = chess.Move(self.selected_square, clicked_square, promotion=chess.QUEEN)
             if move in self.board.legal_moves:
                 self.board.push(move)
@@ -148,9 +149,9 @@ class ChessGUI(tk.Tk):
                 self.update_board()
                 self.after(100, self.agent_move)
             else:
-                # If the clicked square has another white piece, change selection.
+                # If the clicked square has another human piece, change selection.
                 piece = self.board.piece_at(clicked_square)
-                if piece is not None and piece.color == chess.WHITE:
+                if piece is not None and piece.color == self.human_color:
                     self.selected_square = clicked_square
                     self.update_board()
                 else:
@@ -161,7 +162,8 @@ class ChessGUI(tk.Tk):
         if self.board.is_game_over():
             self.show_game_over()
             return
-        move, score = self.agent.play(self.board, self.minimax_depth) if self.use_minimax else self.agent.playMCTS(self.board,self.mcts_iterations)
+        move, score = (self.agent.play(self.board, self.minimax_depth)
+                       if self.use_minimax else self.agent.playMCTS(self.board, self.mcts_iterations))
         if move is not None:
             self.last_move = move
             self.update_board()
@@ -180,12 +182,14 @@ class ChessGUI(tk.Tk):
         )
 
 if __name__ == '__main__':
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--minimax", action="store_true", help="use the minimax search instead of MCTS")
-  parser.add_argument("--md", type=int, default=2, help="minimax depth")
-  parser.add_argument("--mi", type=int, default=1000, help="MCTS iterations")
-  args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--minimax", action="store_true", help="use the minimax search instead of MCTS")
+    parser.add_argument("--md", type=int, default=2, help="minimax depth")
+    parser.add_argument("--mi", type=int, default=1000, help="MCTS iterations")
+    parser.add_argument("--side", choices=["white", "black"], default="white", help="choose your side: white or black")
+    args = parser.parse_args()
 
-  gui = ChessGUI(args.minimax, args.md, args.mi)
-  gui.mainloop()
+    human_color = chess.WHITE if args.side == "white" else chess.BLACK
+    gui = ChessGUI(human_color, args.minimax, args.md, args.mi)
+    gui.mainloop()
